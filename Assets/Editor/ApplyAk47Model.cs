@@ -5,8 +5,9 @@ using UnityEngine;
 public static class ApplyAk47Model
 {
     // Reapplies the currently imported AK-47 asset after model replacement.
-    const string ModelPath = "Assets/Custom/Weapons/AK47/ak47.fbx";
+    const string ModelPath = "Assets/Custom/Weapons/AK47/ak47 1.fbx";
     const string BlasterPrefabPath = "Assets/FPS/Prefabs/Weapons/Weapon_Blaster.prefab";
+    const float ViewModelScale = 1.2f;
 
     [InitializeOnLoadMethod]
     static void ScheduleApply()
@@ -47,19 +48,21 @@ public static class ApplyAk47Model
             ak.name = "AK47_Model";
             ak.transform.SetParent(gunRoot, false);
             ak.transform.localPosition = Vector3.zero;
-            // The source model is authored side-on: stock at -X, muzzle at +X.
-            // Rotate +X toward the player's forward (+Z) without rolling/flipping the silhouette.
-            ak.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
+            // The imported ak47 1 model faces the opposite direction to the old asset.
+            // Turn it around the vertical axis so the muzzle faces forward.
+            ak.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
             ak.transform.localScale = Vector3.one;
 
             Bounds initialBounds = GetBoundsInRoot(ak.transform, gunRoot);
             float targetLength = Mathf.Max(targetBounds.size.x, targetBounds.size.y, targetBounds.size.z);
             float modelLength = Mathf.Max(initialBounds.size.x, initialBounds.size.y, initialBounds.size.z);
-            float uniformScale = modelLength > 0.0001f ? targetLength / modelLength : 1f;
+            float uniformScale = modelLength > 0.0001f ? targetLength / modelLength * ViewModelScale : 1f;
             ak.transform.localScale = Vector3.one * uniformScale;
 
             Bounds fittedBounds = GetBoundsInRoot(ak.transform, gunRoot);
             ak.transform.localPosition += targetBounds.center - fittedBounds.center;
+            // Raise and bring the rifle slightly inward for the first-person framing.
+            ak.transform.localPosition += new Vector3(-0.025f, 0.04f, 0f) * targetLength;
 
             // Keep gameplay objects and muzzle intact; hide only the old rendered gun.
             oldVisual.gameObject.SetActive(false);
